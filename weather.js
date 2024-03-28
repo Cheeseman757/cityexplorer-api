@@ -1,7 +1,9 @@
+
 const axios = require('axios');
 const dotenv = require('dotenv');
 
 dotenv.config();
+const weather_key = process.env.WEATHERBIT_API_KEY;
 
 class Forecast {
   constructor(date, description, high, low) {
@@ -12,15 +14,20 @@ class Forecast {
   }
 }
 
-async function getWeather(lat, lon) {
+async function fetchWeatherData(raw_lat_lon) {
   try {
-    const weather_key = process.env.WEATHER_API_KEY;
-    const weatherData = await axios.get(`https://api.weatherbit.io/v2.0/forecast/daily?lat=${lat}&lon=${lon}&key=${weather_key}&days=6&units=I`);
-    const weatherDex = weatherData.data.data.map(values => new Forecast(values.datetime, values.weather.description, values.max_temp, values.min_temp));
-    return weatherDex;
+    const lat = Number(parseFloat(raw_lat_lon.split('_')[0]).toFixed(4));
+    const lon = Number(parseFloat(raw_lat_lon.split('_')[1]).toFixed(4));
+    let weatherData = await axios.get(`https://api.weatherbit.io/v2.0/forecast/daily?lat=${lat}&lon=${lon}&key=${weather_key}&days=6&units=I`);
+    return weatherData.data.data.map((values) => {
+      return new Forecast(values.datetime, values.weather.description, values.max_temp, values.min_temp);
+    });
   } catch (error) {
-    throw new Error(`Error fetching weather data: ${error.message}`);
+    console.log('Cannot get weather data');
+    return [];
   }
 }
 
-module.exports = getWeather;
+module.exports = {
+  fetchWeatherData
+};
