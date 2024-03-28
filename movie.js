@@ -2,31 +2,35 @@ const axios = require('axios');
 const dotenv = require('dotenv');
 
 dotenv.config();
+const movies_key = process.env.MOVIE_API_KEY;
 
 class Movie {
-  constructor(title, releaseDate, overview) {
+  constructor(title, date, description) {
     this.title = title;
-    this.releaseDate = releaseDate;
-    this.overview = overview;
+    this.date = date;
+    this.description = description;
   }
 }
 
-async function getMovies(city) {
+async function fetchMoviesData(city) {
   try {
-    const movie_key = process.env.MOVIE_API_KEY;
     const options = {
       headers: {
         accept: 'application/json',
-        Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIwMjRiMGE4ZWI5Yzg4YzU2ZjMwMzhkMWU2OTg5OWYyYSIsInN1YiI6IjY1ZTk2MjUxM2Q3NDU0MDE2NGI4YjY4ZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.aR5SgToQPhk55h4UKSm_WUhKEPl8fALYoMwTXhZeLLg'
-
+        Authorization: `Bearer ${movies_key}`
       }
     };
-    const movieData = await axios.get(`https://api.themoviedb.org/3/search/movie?query=${city}&include_adult=false&language=en-US&page=1`, options);
-    const moviesDex = movieData.data.results.map(values => new Movie(values.title, values.release_date, values.overview));
-    return moviesDex;
+
+    let movieData = await axios.get(`https://api.themoviedb.org/3/search/movie?query=${city}&include_adult=false&language=en-US&page=1`, options);
+    return movieData.data.results.map((values) => {
+      return new Movie(values.title, values.release_date, values.overview);
+    });
   } catch (error) {
-    throw new Error(`Error fetching movie data: ${error.message}`);
+    console.log('Cannot get movie data');
+    return [];
   }
 }
 
-module.exports = getMovies;
+module.exports = {
+  fetchMoviesData
+};
